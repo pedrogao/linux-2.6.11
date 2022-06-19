@@ -371,7 +371,7 @@ static void __init smp_init(void)
 static void noinline rest_init(void)
 	__releases(kernel_lock)
 {
-	kernel_thread(init, NULL, CLONE_FS | CLONE_SIGHAND);
+	kernel_thread(init, NULL, CLONE_FS | CLONE_SIGHAND); // 用户态 1号进程
 	numa_default_policy();
 	unlock_kernel();
 	preempt_enable_no_resched();
@@ -411,6 +411,8 @@ void __init parse_early_param(void)
 
 /*
  *	Activate the first processor.
+ *  start_kernel：内核入口函数
+ *  BOIS -> bootloader -> 多级引导器 -> kernel
  */
 
 asmlinkage void __init start_kernel(void)
@@ -437,6 +439,7 @@ asmlinkage void __init start_kernel(void)
 	 * Set up the scheduler prior starting any interrupts (such as the
 	 * timer interrupt). Full topology setup happens at smp_init()
 	 * time - but meanwhile we still have a functioning scheduler.
+	 * 调度初始化
 	 */
 	sched_init();
 	/*
@@ -452,7 +455,7 @@ asmlinkage void __init start_kernel(void)
 		   __stop___param - __start___param,
 		   &unknown_bootoption);
 	sort_main_extable();
-	trap_init();
+	trap_init();   // trap 初始化，exceptions & interrupt
 	rcu_init();
 	init_IRQ();
 	pidhash_init();
@@ -511,7 +514,7 @@ asmlinkage void __init start_kernel(void)
 	acpi_early_init(); /* before LAPIC and SMP init */
 
 	/* Do the rest non-__init'ed, we're now alive */
-	rest_init();
+	rest_init();  // 资源初始化
 }
 
 static int __initdata initcall_debug;
